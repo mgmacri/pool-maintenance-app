@@ -1,0 +1,33 @@
+# Binaries
+/bin/
+
+# Vendor
+/vendor/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+*.exe
+*.test
+*.out
+
+# Test coverage
+coverage.out
+
+# Logs
+*.log
+
+# Env files
+*.env
+
+# Editor swap files
+*.swp
+
+# Swagger
+/docs/swagger/*
