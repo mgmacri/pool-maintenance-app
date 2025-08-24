@@ -83,8 +83,8 @@ You can also run the full pipeline locally using [`act`](https://github.com/nekt
 act -j build
 ```
 
-> Note: The artifact upload step is skipped locally, and Trivy or golangci-lint must be installed in the runner image. Security scanning may fail the build if vulnerabilities are found—this is intentional for best practices.
->>>>>>> Stashed changes
+Note: The artifact upload step is skipped locally, and Trivy or golangci-lint must be installed in the runner image. Security scanning may fail the build if vulnerabilities are found—this is intentional for best practices.
+
 
 
 ## License
