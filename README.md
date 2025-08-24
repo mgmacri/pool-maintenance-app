@@ -19,8 +19,9 @@ Pool Maintenance API — a Go project following Clean Architecture and DevOps be
 	go run ./cmd/main.go
 	```
 
-### Run with Docker
-1. Build the Docker image:
+
+### Run with Docker (Static musl/Alpine build)
+1. Build the Docker image (now uses Alpine and a fully static musl-linked Go binary):
 	```sh
 	docker build -t pool-maintenance-api .
 	```
@@ -30,6 +31,8 @@ Pool Maintenance API — a Go project following Clean Architecture and DevOps be
 	```
 3. Access the health check endpoint:
 	[http://localhost:8080/health](http://localhost:8080/health)
+
+**Note:** The Docker image is now based on Alpine Linux and contains a statically linked Go binary built with musl libc. This eliminates glibc version issues (e.g., "GLIBC_x.x not found") and ensures maximum portability across Linux hosts. See the Dockerfile for build details.
 
 
 
@@ -60,24 +63,6 @@ go test ./...
 ```
 
 
-## CI/CD
-
-All pushes and PRs to `main` trigger the GitHub Actions pipeline, which:
-<<<<<<< Updated upstream
-- Builds, formats, vets, and tests the code
-- Runs static analysis with golangci-lint
-- Measures and uploads code coverage
-- Builds and scans the Docker image for vulnerabilities (Trivy)
-- Performs a health check endpoint smoke test
-=======
-
-- Builds, formats, vets, and tests the code
-- Runs static analysis with **golangci-lint** (v2.x)
-- Checks code coverage
-- Scans for vulnerabilities with **Trivy** (Go modules and Docker image)
-- Builds and tests the Docker image
-
-You can also run the full pipeline locally using [`act`](https://github.com/nektos/act):
 
 ```sh
 act -j build

@@ -1,26 +1,17 @@
-# Start from the official Go image for building
-FROM golang:1.25.0 AS builder
+FROM golang:1.25-alpine AS builder
 
-WORKDIR /app
+RUN apk add --no-cache musl-dev build-base
 
-# Copy go.mod and go.sum first for dependency caching
-COPY go.mod .
-COPY go.sum .
-RUN go mod download
-
-# Copy the rest of the source code
+WORKDIR /src
 COPY . .
 
-# Build the Go app
-RUN go build -o pool-maintenance-api ./cmd/main.go
+# Build a fully static binary
+RUN CGO_ENABLED=1 go build -tags netgo -ldflags="-linkmode external -extldflags '-static'" -o /myapp ./cmd/main.go
 
-# Start a minimal image for running
-FROM gcr.io/distroless/base-debian12
-WORKDIR /app
-COPY --from=builder /app/pool-maintenance-api .
+FROM alpine:3.19
 
-# Expose port (adjust if your app uses a different port)
+COPY --from=builder /myapp /usr/local/bin/myapp
+
 EXPOSE 8080
 
-# Run the binary
-ENTRYPOINT ["/app/pool-maintenance-api"]
+ENTRYPOINT ["/usr/local/bin/myapp"]
