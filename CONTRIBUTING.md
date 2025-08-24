@@ -16,21 +16,31 @@ Thank you for your interest in contributing! We welcome all contributions that h
    git checkout -b feat/your-feature-name
    ```
 3. **Make your changes** with clear, conventional commit messages.
-4. **Test your changes locally** before pushing. You can run the app with Go or Docker:
-   - **With Go:**
+
+4. **Test your changes locally** before pushing. You can:
+   - **Run the app with Go:**
      ```sh
      go run ./cmd/main.go
      ```
-   - **With Docker:**
+   - **Run with Docker:**
      ```sh
      docker build -t pool-maintenance-api .
      docker run -p 8080:8080 pool-maintenance-api
      ```
+   - **Run the full CI pipeline locally with [`act`](https://github.com/nektos/act):**
+     ```sh
+     act -j build
+     ```
+     > Note: The artifact upload step is skipped locally, and Trivy/golangci-lint must be installed in the runner image. Security scanning may fail the build if vulnerabilities are found—this is intentional for best practices.
    - Visit [http://localhost:8080/health](http://localhost:8080/health) to verify the health check endpoint.
 5. **Push your branch** to your fork and open a Pull Request (PR) to the main repository.
 6. **Describe your changes** clearly in the PR description.
+<<<<<<< Updated upstream
 
 7. **Request a review** if needed. All PRs require at least one review and must pass CI checks before merging.
+=======
+7. **Request a review** if needed. All PRs require at least one review and must pass CI checks before merging (including lint, coverage, and security scan steps).
+>>>>>>> Stashed changes
 8. **After merging**, delete your feature branch if no longer needed.
 
 ## Continuous Integration (CI)

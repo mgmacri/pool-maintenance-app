@@ -63,11 +63,28 @@ go test ./...
 ## CI/CD
 
 All pushes and PRs to `main` trigger the GitHub Actions pipeline, which:
+<<<<<<< Updated upstream
 - Builds, formats, vets, and tests the code
 - Runs static analysis with golangci-lint
 - Measures and uploads code coverage
 - Builds and scans the Docker image for vulnerabilities (Trivy)
 - Performs a health check endpoint smoke test
+=======
+
+- Builds, formats, vets, and tests the code
+- Runs static analysis with **golangci-lint** (v2.x)
+- Checks code coverage
+- Scans for vulnerabilities with **Trivy** (Go modules and Docker image)
+- Builds and tests the Docker image
+
+You can also run the full pipeline locally using [`act`](https://github.com/nektos/act):
+
+```sh
+act -j build
+```
+
+> Note: The artifact upload step is skipped locally, and Trivy or golangci-lint must be installed in the runner image. Security scanning may fail the build if vulnerabilities are found—this is intentional for best practices.
+>>>>>>> Stashed changes
 
 
 ## License
