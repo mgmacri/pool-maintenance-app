@@ -4,8 +4,10 @@
 
 Pool Maintenance API — a Go project following Clean Architecture and DevOps best practices.
 
+
 ## Getting Started
 
+### Run Locally (Go)
 1. Ensure you have Go 1.25+ installed.
 2. Clone the repository.
 3. Install dependencies:
@@ -17,12 +19,28 @@ Pool Maintenance API — a Go project following Clean Architecture and DevOps be
 	go run ./cmd/main.go
 	```
 
+### Run with Docker
+1. Build the Docker image:
+	```sh
+	docker build -t pool-maintenance-api .
+	```
+2. Run the container:
+	```sh
+	docker run -p 8080:8080 pool-maintenance-api
+	```
+3. Access the health check endpoint:
+	[http://localhost:8080/health](http://localhost:8080/health)
+
+
+
 ## Project Structure
 
 - `cmd/` — Application entry point
-- `internal/` — Clean architecture layers (domain, usecase, delivery, repository)
+- `internal/delivery/` — HTTP handlers (e.g., health check handler)
+- `internal/` — Clean architecture layers (domain, usecase, repository)
 - `pkg/` — Shared utilities
 - `docs/` — Documentation
+
 
 ## Contributing
 

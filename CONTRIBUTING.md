@@ -5,6 +5,7 @@
 
 Thank you for your interest in contributing! We welcome all contributions that help improve this project.
 
+
 ## How to Contribute
 
 1. **Fork the repository** and clone your fork locally.
@@ -15,7 +16,17 @@ Thank you for your interest in contributing! We welcome all contributions that h
    git checkout -b feat/your-feature-name
    ```
 3. **Make your changes** with clear, conventional commit messages.
-4. **Test your changes** locally before pushing.
+4. **Test your changes locally** before pushing. You can run the app with Go or Docker:
+   - **With Go:**
+     ```sh
+     go run ./cmd/main.go
+     ```
+   - **With Docker:**
+     ```sh
+     docker build -t pool-maintenance-api .
+     docker run -p 8080:8080 pool-maintenance-api
+     ```
+   - Visit [http://localhost:8080/health](http://localhost:8080/health) to verify the health check endpoint.
 5. **Push your branch** to your fork and open a Pull Request (PR) to the main repository.
 6. **Describe your changes** clearly in the PR description.
 7. **Request a review** if needed. All PRs require at least one review and must pass CI checks before merging.
