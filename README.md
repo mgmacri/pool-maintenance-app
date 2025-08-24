@@ -1,6 +1,8 @@
 # pool-maintenance-app
 
-Initial Go project setup for the Pool Maintenance API.
+![Go CI](https://github.com/mgmacri/pool-maintenance-app/actions/workflows/go-ci.yml/badge.svg)
+
+Pool Maintenance API — a Go project following Clean Architecture and DevOps best practices.
 
 ## Getting Started
 
@@ -17,10 +19,36 @@ Initial Go project setup for the Pool Maintenance API.
 
 ## Project Structure
 
-- `cmd/` - Application entry point
-- `internal/` - Clean architecture layers (domain, usecase, delivery, repository)
-- `pkg/` - Shared utilities
-- `docs/` - Documentation
+- `cmd/` — Application entry point
+- `internal/` — Clean architecture layers (domain, usecase, delivery, repository)
+- `pkg/` — Shared utilities
+- `docs/` — Documentation
+
+## Contributing
+
+We follow an industry-standard Git workflow:
+
+1. Create a new branch for each feature or fix (e.g., `feat/feature-name`, `ci/add-go-test-step`).
+2. Make your changes and commit with clear, conventional messages.
+3. Push your branch and open a Pull Request (PR) to `main`.
+4. All PRs require at least one review and must pass CI checks before merging.
+5. After merging, delete the feature branch if no longer needed.
+
+## Running Tests
+
+To run all tests locally:
+```sh
+go test ./...
+```
+
+## CI/CD
+
+All pushes and PRs to `main` trigger the GitHub Actions pipeline, which builds, formats, vets, and tests the code.
+
+
+## License
+
+This project is licensed under the terms of the [MIT License](LICENSE).
 
 ---
-This is the initial setup commit. Further features will be added incrementally.
+For questions or contributions, open an issue or PR.
