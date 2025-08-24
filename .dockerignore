@@ -1,0 +1,26 @@
+# Ignore the binary if present
+pool-maintenance-api
+
+# Ignore build and output directories
+bin/
+obj/
+
+# Ignore Go build cache
+*.out
+
+# Ignore VCS
+.git
+.gitignore
+
+# Ignore editor/project files
+.vscode/
+.idea/
+*.swp
+
+# Ignore test/coverage files
+coverage.out
+*.log
+
+# Ignore OS files
+.DS_Store
+Thumbs.db

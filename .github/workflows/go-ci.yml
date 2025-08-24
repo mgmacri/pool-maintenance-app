@@ -33,3 +33,20 @@ jobs:
 
     - name: Run tests
       run: go test -v ./...
+
+    - name: Build Docker image
+      run: docker build -t pool-maintenance-api .
+
+    - name: Run Docker container (background)
+      run: |
+        docker run -d -p 8080:8080 --name pool-maintenance-api-test pool-maintenance-api
+
+    - name: Health check endpoint smoke test
+      run: |
+        sleep 3
+        curl --fail http://localhost:8080/health | grep '"status":"ok"'
+
+    - name: Cleanup Docker container
+      if: always()
+      run: |
+        docker rm -f pool-maintenance-api-test || true

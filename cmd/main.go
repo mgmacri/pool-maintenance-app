@@ -1,7 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/mgmacri/pool-maintenance-app/internal/delivery"
+)
 
 func main() {
-	fmt.Println("Pool Maintenance API - Entry Point")
+	r := gin.Default()
+	healthHandler := delivery.NewHealthHandler()
+	r.GET("/health", healthHandler.Check)
+	r.Run(":8080")
 }
