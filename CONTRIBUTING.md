@@ -22,11 +22,12 @@ Thank you for your interest in contributing! We welcome all contributions that h
      ```sh
      go run ./cmd/main.go
      ```
-   - **Run with Docker:**
+   - **Run with Docker (Static musl/Alpine build):**
      ```sh
      docker build -t pool-maintenance-api .
      docker run -p 8080:8080 pool-maintenance-api
      ```
+     > The Docker image is now based on Alpine Linux and contains a statically linked Go binary built with musl libc. This eliminates glibc version issues and ensures portability.
    - **Run the full CI pipeline locally with [`act`](https://github.com/nektos/act):**
      ```sh
      act -j build
