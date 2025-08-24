@@ -29,8 +29,19 @@ Thank you for your interest in contributing! We welcome all contributions that h
    - Visit [http://localhost:8080/health](http://localhost:8080/health) to verify the health check endpoint.
 5. **Push your branch** to your fork and open a Pull Request (PR) to the main repository.
 6. **Describe your changes** clearly in the PR description.
+
 7. **Request a review** if needed. All PRs require at least one review and must pass CI checks before merging.
 8. **After merging**, delete your feature branch if no longer needed.
+
+## Continuous Integration (CI)
+
+Our GitHub Actions pipeline will automatically:
+- Lint your code with golangci-lint
+- Run tests and measure code coverage
+- Build and scan the Docker image and Go dependencies for vulnerabilities (Trivy)
+- Run a health check endpoint smoke test
+
+Please ensure your code passes all CI checks before requesting a review.
 
 ## Code Style
 - Follow Go formatting standards (`go fmt`).

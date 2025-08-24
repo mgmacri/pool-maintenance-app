@@ -59,9 +59,15 @@ To run all tests locally:
 go test ./...
 ```
 
+
 ## CI/CD
 
-All pushes and PRs to `main` trigger the GitHub Actions pipeline, which builds, formats, vets, and tests the code.
+All pushes and PRs to `main` trigger the GitHub Actions pipeline, which:
+- Builds, formats, vets, and tests the code
+- Runs static analysis with golangci-lint
+- Measures and uploads code coverage
+- Builds and scans the Docker image for vulnerabilities (Trivy)
+- Performs a health check endpoint smoke test
 
 
 ## License
