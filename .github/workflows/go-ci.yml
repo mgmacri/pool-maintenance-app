@@ -33,7 +33,6 @@ jobs:
 
     - name: Install golangci-lint
       run: |
-<<<<<<< Updated upstream
         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.56.2
     - name: Run golangci-lint
       run: golangci-lint run ./...
@@ -42,7 +41,6 @@ jobs:
     - name: Run tests with coverage
       run: go test -coverprofile=coverage.out -covermode=atomic ./...
     - name: Upload coverage report
-=======
         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v2.4.0
 
     - name: Run golangci-lint
@@ -53,35 +51,27 @@ jobs:
 
     - name: Upload coverage report
       if: ${{ env.ACT != 'true' }}
->>>>>>> Stashed changes
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
         path: coverage.out
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
-
     - name: Build Docker image
       run: docker build -t pool-maintenance-api .
 
     - name: Install Trivy
       run: |
         sudo apt-get update && sudo apt-get install -y wget
-<<<<<<< Updated upstream
         wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.51.1_Linux-64bit.deb
         sudo dpkg -i trivy_0.51.1_Linux-64bit.deb
+        
     - name: Scan Go dependencies for vulnerabilities
       run: trivy fs --scanners vuln --exit-code 1 --severity HIGH,CRITICAL .
-=======
         wget https://github.com/aquasecurity/trivy/releases/download/v0.65.0/trivy_0.65.0_Linux-64bit.deb
         sudo dpkg -i trivy_0.65.0_Linux-64bit.deb
 
     - name: Scan Go dependencies for vulnerabilities
       run: trivy fs --scanners vuln --exit-code 1 --severity HIGH,CRITICAL .
 
->>>>>>> Stashed changes
     - name: Scan Docker image for vulnerabilities
       run: trivy image --exit-code 1 --severity HIGH,CRITICAL pool-maintenance-api
 
