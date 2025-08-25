@@ -1,0 +1,68 @@
+{
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a sample API for pool maintenance, demonstrating Clean Architecture, structured logging, and DevOps best practices.",
+        "title": "Pool Maintenance API",
+        "termsOfService": "https://github.com/mgmacri/pool-maintenance-app",
+        "contact": {
+            "name": "Matthew G. Macri",
+            "url": "https://github.com/mgmacri",
+            "email": "mgmacri@example.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/health": {
+            "get": {
+                "description": "Returns service health and version info. Useful for uptime monitoring, CI/CD, and debugging.\n\n**Example GitHub Actions usage:**\nA step in your CI/CD pipeline to verify deployment.\n```yaml\n- name: Check service health\nuses: jtalk/url-health-check-action@v4\nwith:\nurl: https://your-app.com/health/live\nmax-attempts: 10\nretry-delay: 5s\n```",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/delivery.HealthCheckResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "delivery.HealthCheckResponse": {
+            "type": "object",
+            "properties": {
+                "build_date": {
+                    "type": "string",
+                    "example": "2025-08-25T12:34:56Z"
+                },
+                "commit": {
+                    "type": "string",
+                    "example": "abc1234"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "1.0.0"
+                }
+            }
+        }
+    }
+}

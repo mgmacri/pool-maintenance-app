@@ -1,0 +1,60 @@
+basePath: /
+definitions:
+  delivery.HealthCheckResponse:
+    properties:
+      build_date:
+        example: "2025-08-25T12:34:56Z"
+        type: string
+      commit:
+        example: abc1234
+        type: string
+      status:
+        example: ok
+        type: string
+      version:
+        example: 1.0.0
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: mgmacri@example.com
+    name: Matthew G. Macri
+    url: https://github.com/mgmacri
+  description: This is a sample API for pool maintenance, demonstrating Clean Architecture,
+    structured logging, and DevOps best practices.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://github.com/mgmacri/pool-maintenance-app
+  title: Pool Maintenance API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: |-
+        Returns service health and version info. Useful for uptime monitoring, CI/CD, and debugging.
+
+        **Example GitHub Actions usage:**
+        A step in your CI/CD pipeline to verify deployment.
+        ```yaml
+        - name: Check service health
+        uses: jtalk/url-health-check-action@v4
+        with:
+        url: https://your-app.com/health/live
+        max-attempts: 10
+        retry-delay: 5s
+        ```
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/delivery.HealthCheckResponse'
+      summary: Health check
+      tags:
+      - health
+schemes:
+- http
+swagger: "2.0"

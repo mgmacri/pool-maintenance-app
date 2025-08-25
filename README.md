@@ -5,7 +5,21 @@
 Pool Maintenance API — a Go project following Clean Architecture and DevOps best practices.
 
 
-## Getting Started
+
+## API Documentation (Swagger/OpenAPI)
+
+This project uses [Swagger/OpenAPI](https://swagger.io/) for interactive API documentation, generated with [swaggo/swag](https://github.com/swaggo/swag).
+
+- **View the docs:**
+	- Locally: [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
+	- In Docker: [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
+- **Regenerate docs after changing endpoint comments:**
+	```sh
+	swag init -g cmd/main.go
+	```
+- **Swagger files are in the `docs/` directory and are copied into the Docker image.**
+
+---
 
 ### Run Locally (Go)
 1. Ensure you have Go 1.25+ installed.
@@ -36,6 +50,38 @@ Pool Maintenance API — a Go project following Clean Architecture and DevOps be
 
 
 
+
+## Observability & Logging
+
+This project uses [Uber Zap](https://github.com/uber-go/zap) for structured, production-grade JSON logging. All logs include:
+
+- `service`: the service name (e.g., `pool-maintenance-api`)
+- `env`: the environment (from the `ENV` environment variable, defaults to `dev`)
+- `version`: the build version (from ldflags)
+- `trace_id`: a placeholder for distributed tracing (currently null, will be populated when tracing is integrated)
+
+**Log Example:**
+```json
+{
+	"level": "info",
+	"ts": 1692979200.123,
+	"caller": "internal/middleware/zap.go:20",
+	"msg": "request completed",
+	"service": "pool-maintenance-api",
+	"env": "dev",
+	"version": "dev",
+	"trace_id": null,
+	"status": 200,
+	"method": "GET",
+	"path": "/health",
+	"ip": "127.0.0.1",
+	...
+}
+```
+
+These fields make logs easy to aggregate and search in systems like Loki, Elasticsearch, or Datadog. Similarly, the `trace_id` field will integrate with tracing in a later feature update. 
+
+---
 ## Project Structure
 
 - `cmd/` — Application entry point
