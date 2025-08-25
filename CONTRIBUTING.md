@@ -34,14 +34,16 @@ Thank you for your interest in contributing! We welcome all contributions that h
      ```
      > Note: The artifact upload step is skipped locally, and Trivy/golangci-lint must be installed in the runner image. Security scanning may fail the build if vulnerabilities are found—this is intentional for best practices.
    - Visit [http://localhost:8080/health](http://localhost:8080/health) to verify the health check endpoint.
+   - **View the Swagger API docs:**
+     - [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
+   - **Regenerate Swagger docs after changing endpoint comments:**
+     ```sh
+     swag init -g cmd/main.go
+     ```
+     > This uses [swaggo/swag](https://github.com/swaggo/swag) to generate OpenAPI docs from Go comments. The generated files are in the `docs/` directory and are included in the Docker image.
 5. **Push your branch** to your fork and open a Pull Request (PR) to the main repository.
 6. **Describe your changes** clearly in the PR description.
-<<<<<<< Updated upstream
-
-7. **Request a review** if needed. All PRs require at least one review and must pass CI checks before merging.
-=======
 7. **Request a review** if needed. All PRs require at least one review and must pass CI checks before merging (including lint, coverage, and security scan steps).
->>>>>>> Stashed changes
 8. **After merging**, delete your feature branch if no longer needed.
 
 ## Continuous Integration (CI)
