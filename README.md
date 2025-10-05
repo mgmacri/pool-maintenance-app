@@ -53,33 +53,80 @@ This project uses [Swagger/OpenAPI](https://swagger.io/) for interactive API doc
 
 ## Observability & Logging
 
-This project uses [Uber Zap](https://github.com/uber-go/zap) for structured, production-grade JSON logging. All logs include:
+This project uses [Uber Zap](https://github.com/uber-go/zap) for structured JSON logging with early correlation primitives in place. Each request is logged once on completion with standardized fields to enable aggregation, filtering, and future distributed tracing.
 
-- `service`: the service name (e.g., `pool-maintenance-api`)
-- `env`: the environment (from the `ENV` environment variable, defaults to `dev`)
-- `version`: the build version (from ldflags)
-- `trace_id`: a placeholder for distributed tracing (currently null, will be populated when tracing is integrated)
+### Correlation Fields
 
-**Log Example:**
+Included in each request log:
+
+| Field | Source | Description |
+|-------|--------|-------------|
+| `service` | build-time constant | Logical service identifier |
+| `env` | `ENV` env var (default `dev`) | Deployment environment tag |
+| `version` | ldflags (`-X internal/version.Version`) | Git or semantic build version |
+| `request_id` | Incoming `X-Request-ID` header or generated | Stable per-request correlation id (32 hex chars if generated) |
+| `trace_id` | Incoming W3C `traceparent` or `X-B3-TraceId` | Distributed trace identifier (empty if not provided) |
+| `status`, `method`, `path`, `latency` | HTTP layer | Request outcome metadata |
+
+### Request ID Behavior
+If a client sends `X-Request-ID`, it is preserved and echoed back. If absent, a 16 byte (32 hex) cryptographically random identifier is generated and returned in the same header. Always propagate this header across downstream calls inside scripts, batch jobs, or tests to stitch cross-service logs.
+
+Example (no incoming request id):
+```bash
+curl -i http://localhost:8080/health | grep -i x-request-id
+```
+
+### Trace ID Extraction (Early Tracing Readiness)
+The middleware inspects (precedence order):
+1. `traceparent` (W3C Trace Context) – validates format `00-<32 hex trace id>-<16 hex parent id>-<2 hex flags>` and ignores invalid / all-zero fields.
+2. `X-B3-TraceId` (B3 single field) – accepts 16 or 32 lowercase hex.
+
+If present & valid, the `trace_id` field is added to the structured log. Otherwise the field is an empty string. Full tracing (spans/export) will come in a later instrumentation sub-chapter.
+
+Example using `traceparent`:
+```bash
+curl -H "traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01" \
+     http://localhost:8080/health
+```
+
+### Log Levels
+Runtime log verbosity is controlled by the `LOG_LEVEL` environment variable (case-insensitive). Supported values:
+`debug`, `info` (default), `warn` / `warning`, `error` / `err`, `dpanic`, `panic`, `fatal`.
+
+Invalid values fall back silently to `info` (future enhancement: emit a startup warning). Example:
+```bash
+LOG_LEVEL=debug go run ./cmd/main.go
+```
+
+Verify debug suppression vs emission (excerpt using tests / observer core):
+```bash
+go test -run TestZapLogger_DebugLogFiltering ./internal/middleware -v
+```
+
+### Sample Log (Redacted for Brevity)
 ```json
 {
-	"level": "info",
-	"ts": 1692979200.123,
-	"caller": "internal/middleware/zap.go:20",
-	"msg": "request completed",
-	"service": "pool-maintenance-api",
-	"env": "dev",
-	"version": "dev",
-	"trace_id": null,
-	"status": 200,
-	"method": "GET",
-	"path": "/health",
-	"ip": "127.0.0.1",
-	...
+  "level": "info",
+  "msg": "request completed",
+  "service": "pool-maintenance-api",
+  "env": "dev",
+  "version": "dev",
+  "request_id": "f3b1a6d9099f4f42e8e97d5d6d3fe0c2",
+  "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "status": 200,
+  "method": "GET",
+  "path": "/health",
+  "latency": 0.0012345
 }
 ```
 
-These fields make logs easy to aggregate and search in systems like Loki, Elasticsearch, or Datadog. Similarly, the `trace_id` field will integrate with tracing in a later feature update. 
+### Future Enhancements (Planned)
+- Inject OpenTelemetry SDK & exporter
+- Span context propagation & sampling controls
+- Log -> Trace correlation enrichment (`trace_flags`, `span_id`)
+- Structured error classification & error code taxonomy
+
+These foundations allow immediate value (correlation, filtering) while minimizing future refactor risk.
 
 ---
 ## Project Structure
