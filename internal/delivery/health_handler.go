@@ -25,6 +25,14 @@ type HealthCheckResponse struct {
 	BuildDate string `json:"build_date" example:"2025-08-25T12:34:56Z"`
 }
 
+// ReadinessResponse will evolve in later commits to include dependency checks; for now matches HealthCheckResponse.
+type ReadinessResponse struct {
+	Status    string `json:"status" example:"ok"`
+	Version   string `json:"version" example:"1.0.0"`
+	Commit    string `json:"commit" example:"abc1234"`
+	BuildDate string `json:"build_date" example:"2025-08-25T12:34:56Z"`
+}
+
 // HealthHandler defines a handler for health checks.
 type HealthHandler struct {
 	Logger *zap.Logger
@@ -54,12 +62,45 @@ func NewHealthHandler(logger *zap.Logger) *HealthHandler {
 // @Produce      json
 // @Success      200  {object}  delivery.HealthCheckResponse
 // @Router       /health [get]
-func (h *HealthHandler) Check(c *gin.Context) {
-	h.Logger.Info("health check endpoint called", zap.String("path", c.FullPath()))
-	c.JSON(http.StatusOK, gin.H{
-		"status":     "ok",
-		"version":    version.Version,
-		"commit":     version.Commit,
-		"build_date": version.BuildDate,
+func (h *HealthHandler) Check(c *gin.Context) { // legacy alias for backward compatibility
+	h.Logger.Info("health check endpoint called (alias for /health/live)", zap.String("path", c.FullPath()))
+	h.livePayload(c)
+}
+
+// Live returns liveness status (process is up). Designed to stay fast & allocation-light.
+// @Summary Liveness probe
+// @Description Returns 200 if the process is running. Avoids external dependency checks.
+// @Tags health
+// @Produce json
+// @Success 200 {object} delivery.HealthCheckResponse
+// @Router /health/live [get]
+func (h *HealthHandler) Live(c *gin.Context) {
+	h.Logger.Debug("liveness probe", zap.String("path", c.FullPath()))
+	h.livePayload(c)
+}
+
+// Ready returns readiness status. In this initial commit it mirrors liveness; later commits will add dependency evaluation.
+// @Summary Readiness probe
+// @Description Indicates whether the service is ready to accept traffic. Will include dependency statuses in later iterations.
+// @Tags health
+// @Produce json
+// @Success 200 {object} delivery.ReadinessResponse
+// @Router /health/ready [get]
+func (h *HealthHandler) Ready(c *gin.Context) {
+	h.Logger.Debug("readiness probe (placeholder)", zap.String("path", c.FullPath()))
+	c.JSON(http.StatusOK, ReadinessResponse{
+		Status:    "ok",
+		Version:   version.Version,
+		Commit:    version.Commit,
+		BuildDate: version.BuildDate,
+	})
+}
+
+func (h *HealthHandler) livePayload(c *gin.Context) {
+	c.JSON(http.StatusOK, HealthCheckResponse{
+		Status:    "ok",
+		Version:   version.Version,
+		Commit:    version.Commit,
+		BuildDate: version.BuildDate,
 	})
 }
