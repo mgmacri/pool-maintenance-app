@@ -65,6 +65,8 @@ Please ensure your code passes all CI checks before requesting a review.
 ## Commit Messages
 Conventional Commits are enforced in CI. Format: `type(scope?): subject`.
 
+Note: Scope is currently OPTIONAL (kept relaxed for early project velocity). We may enforce non-empty scopes once modules/packages stabilize.
+
 Common types:
 - `feat`: user-facing feature
 - `fix`: bug fix
@@ -86,6 +88,7 @@ Examples:
 feat: embed build metadata into binary
 chore: add CODEOWNERS and PR template
 docs: update README with build metadata usage (plan 1.1 step 6)
+feat(health): extend /health with uptime_seconds   # optional scoped style
 ```
 
 ## Reporting Issues

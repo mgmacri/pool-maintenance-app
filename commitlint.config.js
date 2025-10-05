@@ -3,11 +3,9 @@
 // This keeps history machine-readable for future changelog automation and ERS traceability.
 module.exports = {
   extends: ['@commitlint/config-conventional'],
-  // You can loosen or tighten rules later; start with defaults.
+  // Initial phase: scopes are OPTIONAL to keep friction low.
+  // Later (after codebase modularizes) we can re-enable strict scopes.
   rules: {
-    // Example: allow chore scope optional; adjust when modules emerge.
-    'scope-empty': [2, 'never'],
-    // Temporarily allow no scope (set to 2 'never' later). Comment out above line if scopes not desired yet.
-    // 'scope-empty': [0, 'always'],
+    'scope-empty': [0, 'always'] // do not error if scope is omitted
   }
 };
