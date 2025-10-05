@@ -2,12 +2,14 @@ package main
 
 import (
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mgmacri/pool-maintenance-app/internal/delivery"
 	"github.com/mgmacri/pool-maintenance-app/internal/middleware"
 	"github.com/mgmacri/pool-maintenance-app/internal/version"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	// Swagger imports
 	_ "github.com/mgmacri/pool-maintenance-app/docs"
@@ -28,19 +30,20 @@ import (
 // @BasePath        /
 // @schemes         http
 func main() {
-	logger, err := zap.NewProduction()
+	env := getEnvDefault("ENV", "dev")
+	logLevelStr := strings.ToLower(getEnvDefault("LOG_LEVEL", "info"))
+	lvl := parseLogLevel(logLevelStr)
+
+	cfg := zap.NewProductionConfig()
+	cfg.Level = zap.NewAtomicLevelAt(lvl)
+	logger, err := cfg.Build()
 	if err != nil {
 		panic("failed to initialize zap logger: " + err.Error())
-	}
-	env := os.Getenv("ENV")
-	if env == "" {
-		env = "dev"
 	}
 	logger = logger.With(
 		zap.String("service", "pool-maintenance-api"),
 		zap.String("env", env),
 		zap.String("version", version.Version),
-		zap.String("trace_id", ""), // Placeholder for future tracing
 	)
 	defer func() {
 		if err := logger.Sync(); err != nil {
@@ -58,8 +61,37 @@ func main() {
 	healthHandler := delivery.NewHealthHandler(logger)
 	r.GET("/health", healthHandler.Check)
 
-	logger.Info("starting server", zap.String("addr", ":8080"))
+	logger.Info("starting server", zap.String("addr", ":8080"), zap.String("log_level", lvl.String()))
 	if err := r.Run(":8080"); err != nil {
 		logger.Fatal("server failed", zap.Error(err))
 	}
+}
+
+func parseLogLevel(s string) zapcore.Level {
+	switch s {
+	case "debug":
+		return zapcore.DebugLevel
+	case "info":
+		return zapcore.InfoLevel
+	case "warn", "warning":
+		return zapcore.WarnLevel
+	case "error", "err":
+		return zapcore.ErrorLevel
+	case "dpanic":
+		return zapcore.DPanicLevel
+	case "panic":
+		return zapcore.PanicLevel
+	case "fatal":
+		return zapcore.FatalLevel
+	default:
+		return zapcore.InfoLevel
+	}
+}
+
+func getEnvDefault(key, def string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+	return v
 }
