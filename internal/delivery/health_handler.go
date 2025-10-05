@@ -1,10 +1,11 @@
 package delivery
 
 import (
-    "net/http"
-    "github.com/gin-gonic/gin"
-    "github.com/mgmacri/pool-maintenance-app/internal/version"
-    "go.uber.org/zap"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/mgmacri/pool-maintenance-app/internal/version"
+	"go.uber.org/zap"
 )
 
 // HealthCheckResponse represents the response body for the health check endpoint.
@@ -26,10 +27,18 @@ type HealthCheckResponse struct {
 
 // ReadinessResponse will evolve in later commits to include dependency checks; for now matches HealthCheckResponse.
 type ReadinessResponse struct {
-	Status    string `json:"status" example:"ok"`
-	Version   string `json:"version" example:"1.0.0"`
-	Commit    string `json:"commit" example:"abc1234"`
-	BuildDate string `json:"build_date" example:"2025-08-25T12:34:56Z"`
+	Status       string              `json:"status" example:"ok"`
+	Version      string              `json:"version" example:"1.0.0"`
+	Commit       string              `json:"commit" example:"abc1234"`
+	BuildDate    string              `json:"build_date" example:"2025-08-25T12:34:56Z"`
+	Dependencies []DependencyStatus  `json:"dependencies"`
+}
+
+// DependencyStatus conveys readiness state for a single dependency.
+type DependencyStatus struct {
+	Name   string `json:"name" example:"db"`
+	Status string `json:"status" example:"ok"`
+	Error  string `json:"error,omitempty" example:"timeout"`
 }
 
 // HealthHandler defines a handler for health checks.
@@ -94,24 +103,29 @@ func (h *HealthHandler) Live(c *gin.Context) {
 // @Router /health/ready [get]
 func (h *HealthHandler) Ready(c *gin.Context) {
 	h.Logger.Debug("readiness probe", zap.String("path", c.FullPath()))
-	// Evaluate placeholder checkers. If any fail, return 503 (degraded).
+	depStatuses := make([]DependencyStatus, 0, len(h.checkers))
+	overallStatus := "ok"
+	httpCode := http.StatusOK
 	for _, chk := range h.checkers {
+		var dep DependencyStatus
+		dep.Name = chk.Name()
 		if err := chk.Check(); err != nil {
+			dep.Status = "degraded"
+			dep.Error = err.Error()
+			overallStatus = "degraded"
+			httpCode = http.StatusServiceUnavailable
 			h.Logger.Warn("readiness dependency failed", zap.String("dependency", chk.Name()), zap.Error(err))
-			c.JSON(http.StatusServiceUnavailable, ReadinessResponse{
-				Status:    "degraded",
-				Version:   version.Version,
-				Commit:    version.Commit,
-				BuildDate: version.BuildDate,
-			})
-			return
+		} else {
+			dep.Status = "ok"
 		}
+		depStatuses = append(depStatuses, dep)
 	}
-	c.JSON(http.StatusOK, ReadinessResponse{
-		Status:    "ok",
-		Version:   version.Version,
-		Commit:    version.Commit,
-		BuildDate: version.BuildDate,
+	c.JSON(httpCode, ReadinessResponse{
+		Status:       overallStatus,
+		Version:      version.Version,
+		Commit:       version.Commit,
+		BuildDate:    version.BuildDate,
+		Dependencies: depStatuses,
 	})
 }
 
