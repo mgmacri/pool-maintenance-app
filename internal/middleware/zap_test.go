@@ -132,3 +132,46 @@ func TestZapLogger_RespectsIncomingRequestID(t *testing.T) {
 	}
 	t.Fatalf("request completed log entry not found")
 }
+
+func TestZapLogger_DebugLogFiltering(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	run := func(level zapcore.Level) (hasDebug bool, hasInfo bool) {
+		core, obs := observer.New(level)
+		logger := zap.New(core)
+		r := gin.New()
+		r.Use(ZapLogger(logger))
+		r.GET("/filter", func(c *gin.Context) {
+			logger.Debug("debug diagnostic", zap.String("k", "v"))
+			logger.Info("info diagnostic", zap.String("k", "v"))
+			c.Status(204)
+		})
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/filter", nil)
+		r.ServeHTTP(w, req)
+		for _, e := range obs.All() {
+			switch e.Message {
+			case "debug diagnostic":
+				hasDebug = true
+			case "info diagnostic":
+				hasInfo = true
+			}
+		}
+		return
+	}
+
+	// Info level should NOT emit debug message
+	dbg, info := run(zapcore.InfoLevel)
+	if dbg {
+		t.Fatalf("expected no debug log at info level")
+	}
+	if !info {
+		t.Fatalf("expected info log at info level")
+	}
+
+	// Debug level should emit both
+	dbg, info = run(zapcore.DebugLevel)
+	if !dbg || !info {
+		t.Fatalf("expected both debug and info logs at debug level (got debug=%v info=%v)", dbg, info)
+	}
+}
