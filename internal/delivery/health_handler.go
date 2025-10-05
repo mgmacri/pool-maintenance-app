@@ -1,11 +1,10 @@
 package delivery
 
 import (
-	"net/http"
-
-	"github.com/gin-gonic/gin"
-	"github.com/mgmacri/pool-maintenance-app/internal/version"
-	"go.uber.org/zap"
+    "net/http"
+    "github.com/gin-gonic/gin"
+    "github.com/mgmacri/pool-maintenance-app/internal/version"
+    "go.uber.org/zap"
 )
 
 // HealthCheckResponse represents the response body for the health check endpoint.
@@ -35,12 +34,19 @@ type ReadinessResponse struct {
 
 // HealthHandler defines a handler for health checks.
 type HealthHandler struct {
-	Logger *zap.Logger
+	Logger   *zap.Logger
+	checkers []ReadinessChecker
+}
+
+// ReadinessChecker defines a dependency readiness contract. Future implementations might check database, cache, message broker, etc.
+type ReadinessChecker interface {
+	Name() string
+	Check() error
 }
 
 // NewHealthHandler creates a new HealthHandler with the provided logger.
-func NewHealthHandler(logger *zap.Logger) *HealthHandler {
-	return &HealthHandler{Logger: logger}
+func NewHealthHandler(logger *zap.Logger, checkers ...ReadinessChecker) *HealthHandler {
+	return &HealthHandler{Logger: logger, checkers: checkers}
 }
 
 // Check returns a simple health status and logs the health check.
@@ -87,7 +93,20 @@ func (h *HealthHandler) Live(c *gin.Context) {
 // @Success 200 {object} delivery.ReadinessResponse
 // @Router /health/ready [get]
 func (h *HealthHandler) Ready(c *gin.Context) {
-	h.Logger.Debug("readiness probe (placeholder)", zap.String("path", c.FullPath()))
+	h.Logger.Debug("readiness probe", zap.String("path", c.FullPath()))
+	// Evaluate placeholder checkers. If any fail, return 503 (degraded).
+	for _, chk := range h.checkers {
+		if err := chk.Check(); err != nil {
+			h.Logger.Warn("readiness dependency failed", zap.String("dependency", chk.Name()), zap.Error(err))
+			c.JSON(http.StatusServiceUnavailable, ReadinessResponse{
+				Status:    "degraded",
+				Version:   version.Version,
+				Commit:    version.Commit,
+				BuildDate: version.BuildDate,
+			})
+			return
+		}
+	}
 	c.JSON(http.StatusOK, ReadinessResponse{
 		Status:    "ok",
 		Version:   version.Version,

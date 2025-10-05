@@ -58,7 +58,7 @@ func main() {
 	// Register Swagger UI route after router is initialized
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	healthHandler := delivery.NewHealthHandler(logger)
+	healthHandler := delivery.NewHealthHandler(logger) // no readiness checkers yet (placeholder)
 	// Legacy single endpoint (backward compatibility)
 	r.GET("/health", healthHandler.Check)
 	// New split probes
