@@ -59,7 +59,11 @@ func main() {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	healthHandler := delivery.NewHealthHandler(logger)
+	// Legacy single endpoint (backward compatibility)
 	r.GET("/health", healthHandler.Check)
+	// New split probes
+	r.GET("/health/live", healthHandler.Live)
+	r.GET("/health/ready", healthHandler.Ready)
 
 	logger.Info("starting server", zap.String("addr", ":8080"), zap.String("log_level", lvl.String()))
 	if err := r.Run(":8080"); err != nil {
