@@ -34,8 +34,14 @@ func TestHealthHandler_Check(t *testing.T) {
 	assert.Contains(t, resp, "version")
 	assert.Contains(t, resp, "commit")
 	assert.Contains(t, resp, "build_date")
-	// Optionally, check types
+	assert.Contains(t, resp, "uptime_seconds")
+
+	// Type assertions
 	assert.IsType(t, "", resp["version"])
 	assert.IsType(t, "", resp["commit"])
 	assert.IsType(t, "", resp["build_date"])
+	// JSON numbers unmarshal to float64
+	assert.IsType(t, float64(0), resp["uptime_seconds"])
+	// Sanity: uptime should be >= 0
+	assert.GreaterOrEqual(t, resp["uptime_seconds"].(float64), 0.0)
 }
