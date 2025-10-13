@@ -27,11 +27,11 @@ type HealthCheckResponse struct {
 
 // ReadinessResponse will evolve in later commits to include dependency checks; for now matches HealthCheckResponse.
 type ReadinessResponse struct {
-	Status       string              `json:"status" example:"ok"`
-	Version      string              `json:"version" example:"1.0.0"`
-	Commit       string              `json:"commit" example:"abc1234"`
-	BuildDate    string              `json:"build_date" example:"2025-08-25T12:34:56Z"`
-	Dependencies []DependencyStatus  `json:"dependencies"`
+	Status       string             `json:"status" example:"ok"`
+	Version      string             `json:"version" example:"1.0.0"`
+	Commit       string             `json:"commit" example:"abc1234"`
+	BuildDate    string             `json:"build_date" example:"2025-08-25T12:34:56Z"`
+	Dependencies []DependencyStatus `json:"dependencies"`
 }
 
 // DependencyStatus conveys readiness state for a single dependency.
