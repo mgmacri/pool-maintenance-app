@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mgmacri/pool-maintenance-app/internal/version"
@@ -19,19 +20,20 @@ import (
 //	  "build_date": "2025-08-25T12:34:56Z"
 //	}
 type HealthCheckResponse struct {
-	Status    string `json:"status" example:"ok"`
-	Version   string `json:"version" example:"1.0.0"`
-	Commit    string `json:"commit" example:"abc1234"`
-	BuildDate string `json:"build_date" example:"2025-08-25T12:34:56Z"`
+	Status        string  `json:"status" example:"ok"`
+	Version       string  `json:"version" example:"1.0.0"`
+	Commit        string  `json:"commit" example:"abc1234"`
+	BuildDate     string  `json:"build_date" example:"2025-08-25T12:34:56Z"`
+	UptimeSeconds float64 `json:"uptime_seconds" example:"123.45"`
 }
 
 // ReadinessResponse will evolve in later commits to include dependency checks; for now matches HealthCheckResponse.
 type ReadinessResponse struct {
-	Status       string              `json:"status" example:"ok"`
-	Version      string              `json:"version" example:"1.0.0"`
-	Commit       string              `json:"commit" example:"abc1234"`
-	BuildDate    string              `json:"build_date" example:"2025-08-25T12:34:56Z"`
-	Dependencies []DependencyStatus  `json:"dependencies"`
+	Status       string             `json:"status" example:"ok"`
+	Version      string             `json:"version" example:"1.0.0"`
+	Commit       string             `json:"commit" example:"abc1234"`
+	BuildDate    string             `json:"build_date" example:"2025-08-25T12:34:56Z"`
+	Dependencies []DependencyStatus `json:"dependencies"`
 }
 
 // DependencyStatus conveys readiness state for a single dependency.
@@ -43,8 +45,9 @@ type DependencyStatus struct {
 
 // HealthHandler defines a handler for health checks.
 type HealthHandler struct {
-	Logger   *zap.Logger
-	checkers []ReadinessChecker
+	Logger    *zap.Logger
+	startTime time.Time
+	checkers  []ReadinessChecker
 }
 
 // ReadinessChecker defines a dependency readiness contract. Future implementations might check database, cache, message broker, etc.
@@ -55,7 +58,7 @@ type ReadinessChecker interface {
 
 // NewHealthHandler creates a new HealthHandler with the provided logger.
 func NewHealthHandler(logger *zap.Logger, checkers ...ReadinessChecker) *HealthHandler {
-	return &HealthHandler{Logger: logger, checkers: checkers}
+	return &HealthHandler{Logger: logger, startTime: time.Now(), checkers: checkers}
 }
 
 // Check returns a simple health status and logs the health check.
@@ -94,12 +97,13 @@ func (h *HealthHandler) Live(c *gin.Context) {
 	h.livePayload(c)
 }
 
-// Ready returns readiness status. In this initial commit it mirrors liveness; later commits will add dependency evaluation.
+// Ready returns readiness status. Checks all registered dependencies.
 // @Summary Readiness probe
-// @Description Indicates whether the service is ready to accept traffic. Will include dependency statuses in later iterations.
+// @Description Indicates whether the service is ready to accept traffic based on dependency health.
 // @Tags health
 // @Produce json
 // @Success 200 {object} delivery.ReadinessResponse
+// @Success 503 {object} delivery.ReadinessResponse
 // @Router /health/ready [get]
 func (h *HealthHandler) Ready(c *gin.Context) {
 	h.Logger.Debug("readiness probe", zap.String("path", c.FullPath()))
@@ -130,10 +134,12 @@ func (h *HealthHandler) Ready(c *gin.Context) {
 }
 
 func (h *HealthHandler) livePayload(c *gin.Context) {
+	uptime := time.Since(h.startTime).Seconds()
 	c.JSON(http.StatusOK, HealthCheckResponse{
-		Status:    "ok",
-		Version:   version.Version,
-		Commit:    version.Commit,
-		BuildDate: version.BuildDate,
+		Status:        "ok",
+		Version:       version.Version,
+		Commit:        version.Commit,
+		BuildDate:     version.BuildDate,
+		UptimeSeconds: uptime,
 	})
 }
