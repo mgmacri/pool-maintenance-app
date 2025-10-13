@@ -8,14 +8,15 @@ Thank you for your interest in contributing! We welcome all contributions that h
 
 ## How to Contribute
 
-1. **Fork the repository** and clone your fork locally.
-2. **Create a new branch** from `main` for each feature or fix:
-   ```sh
-   git checkout main
-   git pull
-   git checkout -b feat/your-feature-name
-   ```
-3. **Make your changes** with clear, conventional commit messages.
+1. **Fork the repository** and clone your fork locally (or work directly if you have access).
+2. **Create a new branch** from `develop` for each sub-chapter or focused change:
+  ```sh
+  git checkout develop
+  git pull origin develop
+  git checkout -b feature/short-descriptor
+  ```
+  Keep branches short‑lived and narrowly scoped (one sub-chapter / cohesive slice).
+3. **Make your changes** with clear [Conventional Commit](https://www.conventionalcommits.org/) messages. A commitlint GitHub Action will validate messages on PRs.
 
 4. **Test your changes locally** before pushing. You can:
    - **Run the app with Go:**
@@ -41,10 +42,10 @@ Thank you for your interest in contributing! We welcome all contributions that h
      swag init -g cmd/main.go
      ```
      > This uses [swaggo/swag](https://github.com/swaggo/swag) to generate OpenAPI docs from Go comments. The generated files are in the `docs/` directory and are included in the Docker image.
-5. **Push your branch** to your fork and open a Pull Request (PR) to the main repository.
-6. **Describe your changes** clearly in the PR description.
-7. **Request a review** if needed. All PRs require at least one review and must pass CI checks before merging (including lint, coverage, and security scan steps).
-8. **After merging**, delete your feature branch if no longer needed.
+5. **Push your branch** and open a Pull Request (PR) targeting `develop`.
+6. **Describe your changes** clearly in the PR description. Reference any ERS IDs or plan steps (e.g., “Plan 1.1 step 3”).
+7. **Request a review**. All PRs require at least one approval and must pass CI checks (lint, tests, security scan, commitlint) before merging.
+8. **After merging**, delete your feature branch locally and remotely to keep the branch list clean.
 
 ## Continuous Integration (CI)
 
@@ -62,13 +63,33 @@ Please ensure your code passes all CI checks before requesting a review.
 - Keep functions and files focused and modular.
 
 ## Commit Messages
-- Use [Conventional Commits](https://www.conventionalcommits.org/):
-  - `feat: add new feature`
-  - `fix: correct a bug`
-  - `docs: update documentation`
-  - `ci: update CI configuration`
-  - `test: add or update tests`
-  - `chore: maintenance or tooling changes`
+Conventional Commits are enforced in CI. Format: `type(scope?): subject`.
+
+Note: Scope is currently OPTIONAL (kept relaxed for early project velocity). We may enforce non-empty scopes once modules/packages stabilize.
+
+Common types:
+- `feat`: user-facing feature
+- `fix`: bug fix
+- `docs`: documentation only
+- `test`: add or update tests
+- `chore`: tooling / maintenance (no production code behavior change)
+- `refactor`: code change that neither fixes a bug nor adds a feature
+- `ci`: CI/CD pipeline changes
+- `ops`: deployment or infrastructure assets
+
+Rules (initial baseline):
+- Use present tense imperative (“add”, not “adds” / “added”).
+- Keep subject ≤ 72 chars.
+- Body (optional) explains motivation, not just what.
+- Reference plan steps or ERS IDs in body when relevant.
+
+Examples:
+```
+feat: embed build metadata into binary
+chore: add CODEOWNERS and PR template
+docs: update README with build metadata usage (plan 1.1 step 6)
+feat(health): extend /health with uptime_seconds   # optional scoped style
+```
 
 ## Reporting Issues
 - Use GitHub Issues to report bugs or request features.

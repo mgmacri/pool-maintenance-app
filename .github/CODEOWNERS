@@ -1,0 +1,30 @@
+# CODEOWNERS
+# This file defines individuals or teams that are responsible for code in this repository.
+# Reference: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Format: one pattern per line followed by one or more owners (GitHub usernames or teams).
+# Wildcards: Use '*' for match all; order matters (last match wins).
+#
+# Strategy:
+# - Default owner for entire repo: @mgmacri
+# - Design / requirements docs can later add reviewers (e.g., @mgmacri) — kept simple for portfolio project.
+# - You can add future collaborators by appending usernames.
+
+# Global ownership
+*       @mgmacri
+
+# Documentation & design (explicit for visibility)
+/design/* @mgmacri
+/docs/*   @mgmacri
+
+# CI / workflows
+/.github/workflows/* @mgmacri
+
+# Go modules & internal packages
+/go.mod  @mgmacri
+/go.sum  @mgmacri
+/internal/** @mgmacri
+/cmd/**      @mgmacri
+
+# Default catch-all (redundant with '*', kept for clarity)
+/ @mgmacri
