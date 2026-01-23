@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/mgmacri/pool-maintenance-app/internal/domain"
@@ -19,10 +20,11 @@ func NewPoolUseCase(repo repository.PoolRepository) *PoolUseCase {
 
 func (uc *PoolUseCase) RegisterPool(name string, gallons int, pType domain.PoolType) (domain.Pool, error) {
 	pool := domain.Pool{
-		ID:      uuid.New().String(),
-		Name:    name,
-		Gallons: gallons,
-		Type:    pType,
+		ID:        uuid.New().String(),
+		Name:      name,
+		Gallons:   gallons,
+		Type:      pType,
+		CreatedAt: time.Now(),
 	}
 	if err := uc.repo.Create(pool); err != nil {
 		return domain.Pool{}, err

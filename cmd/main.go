@@ -1,10 +1,13 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq" // added postgres driver
 	"github.com/mgmacri/pool-maintenance-app/internal/delivery"
 	"github.com/mgmacri/pool-maintenance-app/internal/middleware"
 	"github.com/mgmacri/pool-maintenance-app/internal/repository" // import repo
@@ -63,7 +66,31 @@ func main() {
 	healthHandler := delivery.NewHealthHandler(logger) // no readiness checkers yet (placeholder)
 
 	// 1. Initialize Repositories (Persistence)
-	poolRepo := repository.NewInMemoryPoolRepo()
+	var poolRepo repository.PoolRepository
+	dbHost := os.Getenv("DB_HOST")
+	if dbHost != "" {
+		dbUser := getEnvDefault("DB_USER", "pool_user")
+		dbPass := getEnvDefault("DB_PASSWORD", "pool_pass")
+		dbName := getEnvDefault("DB_NAME", "pool_db")
+		// Assume standard port 5432 if not set
+		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbUser, dbPass, dbName)
+
+		db, err := sql.Open("postgres", dsn)
+		if err != nil {
+			logger.Fatal("Failed to open database connection", zap.Error(err))
+		}
+
+		// Verify connection
+		if err := db.Ping(); err != nil {
+			logger.Fatal("Failed to ping database", zap.Error(err))
+		}
+
+		poolRepo = repository.NewPostgresPoolRepository(db)
+		logger.Info("Using Postgres Repository", zap.String("host", dbHost))
+	} else {
+		poolRepo = repository.NewInMemoryPoolRepo()
+		logger.Info("Using In-Memory Repository (No persistence)")
+	}
 
 	// 2. Initialize UseCases (Business Logic)
 	poolService := usecase.NewPoolUseCase(poolRepo)
