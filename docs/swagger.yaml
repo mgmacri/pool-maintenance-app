@@ -1,5 +1,35 @@
 basePath: /
 definitions:
+  delivery.CreatePoolRequest:
+    properties:
+      gallons:
+        minimum: 100
+        type: integer
+      name:
+        type: string
+      type:
+        allOf:
+        - $ref: '#/definitions/domain.PoolType'
+        enum:
+        - chlorine
+        - salt
+    required:
+    - gallons
+    - name
+    - type
+    type: object
+  delivery.DependencyStatus:
+    properties:
+      error:
+        example: timeout
+        type: string
+      name:
+        example: db
+        type: string
+      status:
+        example: ok
+        type: string
+    type: object
   delivery.HealthCheckResponse:
     properties:
       build_date:
@@ -11,10 +41,91 @@ definitions:
       status:
         example: ok
         type: string
+      uptime_seconds:
+        example: 123.45
+        type: number
       version:
         example: 1.0.0
         type: string
     type: object
+  delivery.ReadinessResponse:
+    properties:
+      build_date:
+        example: "2025-08-25T12:34:56Z"
+        type: string
+      commit:
+        example: abc1234
+        type: string
+      dependencies:
+        items:
+          $ref: '#/definitions/delivery.DependencyStatus'
+        type: array
+      status:
+        example: ok
+        type: string
+      version:
+        example: 1.0.0
+        type: string
+    type: object
+  domain.ChemicalReading:
+    properties:
+      alkalinity:
+        example: 80
+        type: integer
+      cyanuric_acid:
+        example: 30
+        type: integer
+      free_chlorine:
+        example: 3
+        type: number
+      ph:
+        example: 7.2
+        type: number
+      pool_id:
+        example: pool-123
+        type: string
+    type: object
+  domain.JobReport:
+    properties:
+      dosage:
+        example:
+        - Add 1lb Soda Ash
+        items:
+          type: string
+        type: array
+      is_balanced:
+        type: boolean
+      pool_id:
+        type: string
+      technician_note:
+        type: string
+    type: object
+  domain.Pool:
+    properties:
+      created_at:
+        type: string
+      gallons:
+        example: 15000
+        type: integer
+      id:
+        example: pool-123
+        type: string
+      name:
+        example: Backyard Oasis
+        type: string
+      type:
+        allOf:
+        - $ref: '#/definitions/domain.PoolType'
+        example: salt
+    type: object
+  domain.PoolType:
+    enum:
+    - chlorine
+    - salt
+    type: string
+    x-enum-varnames:
+    - PoolTypeChlorine
+    - PoolTypeSalt
 host: localhost:8080
 info:
   contact:
@@ -30,6 +141,94 @@ info:
   title: Pool Maintenance API
   version: "1.0"
 paths:
+  /api/v1/chemistry/analyze:
+    post:
+      consumes:
+      - application/json
+      description: Submits readings (pH, Cl) and returns dosage instructions based
+        on pool volume
+      parameters:
+      - description: Water readings
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ChemicalReading'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.JobReport'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Analyze water chemistry
+      tags:
+      - chemistry
+  /api/v1/pools:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new pool entity in the system
+      parameters:
+      - description: Pool details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/delivery.CreatePoolRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Pool'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new pool
+      tags:
+      - pools
+  /api/v1/pools/{id}:
+    get:
+      description: Retrieves pool details by ID
+      parameters:
+      - description: Pool ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Pool'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a pool
+      tags:
+      - pools
   /health:
     get:
       description: |-
@@ -53,6 +252,38 @@ paths:
           schema:
             $ref: '#/definitions/delivery.HealthCheckResponse'
       summary: Health check
+      tags:
+      - health
+  /health/live:
+    get:
+      description: Returns 200 if the process is running. Avoids external dependency
+        checks.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/delivery.HealthCheckResponse'
+      summary: Liveness probe
+      tags:
+      - health
+  /health/ready:
+    get:
+      description: Indicates whether the service is ready to accept traffic based
+        on dependency health.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/delivery.ReadinessResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/delivery.ReadinessResponse'
+      summary: Readiness probe
       tags:
       - health
 schemes:
