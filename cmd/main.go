@@ -7,6 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mgmacri/pool-maintenance-app/internal/delivery"
 	"github.com/mgmacri/pool-maintenance-app/internal/middleware"
+	"github.com/mgmacri/pool-maintenance-app/internal/repository" // import repo
+	"github.com/mgmacri/pool-maintenance-app/internal/usecase"    // import usecase
 	"github.com/mgmacri/pool-maintenance-app/internal/version"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -59,11 +61,29 @@ func main() {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	healthHandler := delivery.NewHealthHandler(logger) // no readiness checkers yet (placeholder)
+
+	// 1. Initialize Repositories (Persistence)
+	poolRepo := repository.NewInMemoryPoolRepo()
+
+	// 2. Initialize UseCases (Business Logic)
+	poolService := usecase.NewPoolUseCase(poolRepo)
+
+	// 3. Initialize Handlers (Presentation)
+	poolHandler := delivery.NewPoolHandler(logger, poolService)
+
 	// Legacy single endpoint (backward compatibility)
 	r.GET("/health", healthHandler.Check)
 	// New split probes
 	r.GET("/health/live", healthHandler.Live)
 	r.GET("/health/ready", healthHandler.Ready)
+
+	// 4. API Routes (Versioned)
+	api := r.Group("/api/v1")
+	{
+		api.POST("/pools", poolHandler.CreatePool)
+		api.GET("/pools/:id", poolHandler.GetPool)
+		api.POST("/chemistry/analyze", poolHandler.AnalyzeChemistry)
+	}
 
 	logger.Info("starting server", zap.String("addr", ":8080"), zap.String("log_level", lvl.String()))
 	if err := r.Run(":8080"); err != nil {

@@ -21,6 +21,139 @@
     "host": "localhost:8080",
     "basePath": "/",
     "paths": {
+        "/api/v1/chemistry/analyze": {
+            "post": {
+                "description": "Submits readings (pH, Cl) and returns dosage instructions based on pool volume",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chemistry"
+                ],
+                "summary": "Analyze water chemistry",
+                "parameters": [
+                    {
+                        "description": "Water readings",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.ChemicalReading"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.JobReport"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/pools": {
+            "post": {
+                "description": "Creates a new pool entity in the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pools"
+                ],
+                "summary": "Register a new pool",
+                "parameters": [
+                    {
+                        "description": "Pool details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/delivery.CreatePoolRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Pool"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/pools/{id}": {
+            "get": {
+                "description": "Retrieves pool details by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pools"
+                ],
+                "summary": "Get a pool",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Pool ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Pool"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Returns service health and version info. Useful for uptime monitoring, CI/CD, and debugging.\n\n**Example GitHub Actions usage:**\nA step in your CI/CD pipeline to verify deployment.\n```yaml\n- name: Check service health\nuses: jtalk/url-health-check-action@v4\nwith:\nurl: https://your-app.com/health/live\nmax-attempts: 10\nretry-delay: 5s\n```",
@@ -40,9 +173,100 @@
                     }
                 }
             }
+        },
+        "/health/live": {
+            "get": {
+                "description": "Returns 200 if the process is running. Avoids external dependency checks.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Liveness probe",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/delivery.HealthCheckResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/health/ready": {
+            "get": {
+                "description": "Indicates whether the service is ready to accept traffic based on dependency health.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Readiness probe",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/delivery.ReadinessResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/delivery.ReadinessResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "delivery.CreatePoolRequest": {
+            "type": "object",
+            "required": [
+                "gallons",
+                "name",
+                "type"
+            ],
+            "properties": {
+                "gallons": {
+                    "type": "integer",
+                    "minimum": 100
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "chlorine",
+                        "salt"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.PoolType"
+                        }
+                    ]
+                }
+            }
+        },
+        "delivery.DependencyStatus": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "timeout"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "db"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                }
+            }
+        },
         "delivery.HealthCheckResponse": {
             "type": "object",
             "properties": {
@@ -58,11 +282,129 @@
                     "type": "string",
                     "example": "ok"
                 },
+                "uptime_seconds": {
+                    "type": "number",
+                    "example": 123.45
+                },
                 "version": {
                     "type": "string",
                     "example": "1.0.0"
                 }
             }
+        },
+        "delivery.ReadinessResponse": {
+            "type": "object",
+            "properties": {
+                "build_date": {
+                    "type": "string",
+                    "example": "2025-08-25T12:34:56Z"
+                },
+                "commit": {
+                    "type": "string",
+                    "example": "abc1234"
+                },
+                "dependencies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/delivery.DependencyStatus"
+                    }
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "1.0.0"
+                }
+            }
+        },
+        "domain.ChemicalReading": {
+            "type": "object",
+            "properties": {
+                "alkalinity": {
+                    "type": "integer",
+                    "example": 80
+                },
+                "cyanuric_acid": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "free_chlorine": {
+                    "type": "number",
+                    "example": 3
+                },
+                "ph": {
+                    "type": "number",
+                    "example": 7.2
+                },
+                "pool_id": {
+                    "type": "string",
+                    "example": "pool-123"
+                }
+            }
+        },
+        "domain.JobReport": {
+            "type": "object",
+            "properties": {
+                "dosage": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "Add 1lb Soda Ash"
+                    ]
+                },
+                "is_balanced": {
+                    "type": "boolean"
+                },
+                "pool_id": {
+                    "type": "string"
+                },
+                "technician_note": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.Pool": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "gallons": {
+                    "type": "integer",
+                    "example": 15000
+                },
+                "id": {
+                    "type": "string",
+                    "example": "pool-123"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Backyard Oasis"
+                },
+                "type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.PoolType"
+                        }
+                    ],
+                    "example": "salt"
+                }
+            }
+        },
+        "domain.PoolType": {
+            "type": "string",
+            "enum": [
+                "chlorine",
+                "salt"
+            ],
+            "x-enum-varnames": [
+                "PoolTypeChlorine",
+                "PoolTypeSalt"
+            ]
         }
     }
 }
